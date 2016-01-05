@@ -1,0 +1,34 @@
+CLASS
+ID: Program
+INT_DECLARATION
+ID: a
+INT_DECLARATION
+ID: b
+ID: e
+INT: 2
+ID: h
+INT_DECLARATION
+ID: c
+BOOLEAN_DECLARATION
+ID: d
+ID: g
+ID: f
+INT_DECLARATION
+ID: k
+ID: a
+BOOLEAN: true
+ID: b
+INT: 1
+ID: k
+INT: 5
+INT: 5
+INT: 10
+INT: 8
+INT: 9
+ID: c
+INT: 3
+CALLOUT
+STRING: "string"
+ID: b
+STRING: "hello"
+CHAR: 'c'

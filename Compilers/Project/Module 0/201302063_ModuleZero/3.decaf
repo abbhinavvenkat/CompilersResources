@@ -1,0 +1,18 @@
+//Program to output the first 10 multiples of a number
+//Abbhinav Venkat, 201302063
+//Gaurav Mittal, 201301149
+
+class Program{
+	
+	void main(){
+
+		int inp, cntr;
+
+		callout("scanf", "%d", &inp);
+
+		for cntr = 1, 11 {
+			callout("printf","%d\n", (cntr*inp));
+		}
+
+	}
+}

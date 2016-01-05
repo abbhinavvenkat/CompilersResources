@@ -1,0 +1,41 @@
+//Nth Fibonacci Number
+//Abbhinav Venkat, 201302063
+//Gaurav Mittal, 201301149
+
+class Program{
+	
+	void main(){
+
+		int inp, first, second, next, cntr, p;
+
+		callout("scanf", "%d", &inp);
+
+		zero = 1;
+		first = 1;
+		p = 0;
+
+		if ( inp == 0 ){
+			callout("printf", "%d ", zero);
+			p = 1;
+		}
+
+		if ( inp == 1){
+			callout("printf", "%d ", first);
+		}
+		else{
+
+			if(p!=1){
+				for cntr = 2, (inp+1) {
+
+					next = zero + first;
+					zero = first;
+					first = next;
+
+				}
+
+				callout("printf", "%d ", next);
+			}
+		}
+
+	}
+}

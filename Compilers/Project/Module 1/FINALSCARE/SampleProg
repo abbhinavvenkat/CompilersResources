@@ -1,0 +1,12 @@
+class Program {
+	int a;
+	int b, e[2], h;
+	int c;
+	boolean d, g, f;
+	int k;
+	a = true;
+	b = 1;
+	k[5] = 5 * 10 + 8 * 9;
+	c = 3;
+	callout("string", b, "hello", 'c');
+}

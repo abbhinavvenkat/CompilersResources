@@ -1,0 +1,6 @@
+class Program {
+	int A;
+	int B[10];
+	boolean C;
+	boolean D[10];
+}

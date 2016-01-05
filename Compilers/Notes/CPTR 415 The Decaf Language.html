@@ -1,0 +1,2223 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+	<title> CPTR 415 The Decaf Language </title>
+</head>
+<body bgcolor="#ffffff">
+<hr>
+<h1 align="CENTER">CPTR 415 Compiler Construction <br>The Decaf
+Programming Language 
+</h1>
+<hr>
+<ol>
+	<li><a href="#intro">Introduction</a> 
+	</li><li><a href="#overview">Decaf Overview</a>
+	</li><li><a href="#notation">Notation</a> 
+	</li><li><a href="#syntax">Decaf Syntax</a>
+	</li><li><a href="#lexical">Lexical Conventions</a> 
+	</li><li><a href="#types">Types</a> 
+	</li><li><a href="#classes">Classes</a> 
+	</li><li><a href="#namespaces">Namespaces</a>
+	</li><li><a href="#statements">Statements</a>
+	</li><li><a href="#expressions">Expressions</a>
+	</li><li><a href="#arrays">Arrays</a> 
+	</li><li><a href="#executing">Miscellaneous</a> 
+	<!--
+	<LI><P><A HREF="#executing">Executing a Decaf Program</A> 
+	-->
+</li></ol>
+<hr>
+<ol>
+	<p>
+	</p><h2><li><a name="intro"></a>Introduction</li></h2>
+	<p>
+
+	During this course you will implement a compiler for
+	the Decaf programming language. Decaf is an adaptation of
+	<a href="http://www.javasoft.com/">Java</a><sup>TM</sup>.
+	(The description of Decaf presented here is actually an adaptation
+	of the original Decaf language specification devised by 
+	<a href="http://www.cs.utk.edu/%7Ebvz">Brad
+	Vander Zanden</a>.) Decaf presents a number of learning
+	opportunities:
+	</p><p>
+
+	</p><ol>
+		<li><b>Decaf is an imperative language.</b> 
+		The experience you gain in developing a Decaf
+		compiler will extend to other imperative languages such 
+		as C, C++, Pascal, and FORTRAN. 
+		<p></p>
+
+		</li><li><b>Decaf is object-oriented.</b>
+		You will learn some of rudiments of compiler technology for
+		object-oriented languages. 
+		<p></p>
+
+		</li><li><b>Usefulness.</b> 
+		If you are unfamiliar with the Java programming 
+		language, programming in Decaf
+		provides an opportunity to get the feel for programming in a
+		Java-like language. 
+		<p></p>
+	</li></ol>
+	<p>
+
+	Student compilers will be written in the C++ programming language
+	and will take advantage of the Lex (Flex) and Yacc (Bison) compiler
+	tools. Your compiler must be able to be built with GNU C++ (G++) and
+	run on the <tt>cpp.cs.southern.edu</tt> programming host (running
+	Linux). You are free to develop on another platform, but you should
+	check to make sure it works on <tt>cpp</tt> before submitting it. 
+	</p><p>
+
+	Your compiler will generate MIPS assembly code that will run on
+	the SPIM simulator. 
+	</p><p>
+
+	If you have your own PC, all the tools necessary for writing the
+	Decaf compiler are available for free 
+	(<a href="http://www.linux.org/">Linux</a>,
+	<a href="http://www.gnu.org/">GNU C++</a>, 
+	<a href="http://www.cs.wisc.edu/%7Elarus/spim.html">SPIM</a>).
+	</p><p>
+
+	</p><h2><li><a name="overview"></a>Decaf Overview</li></h2>
+	<p>
+	
+	Decaf is a strongly typed language that supports the following
+	features: 
+	</p>
+	<ol>
+		<li>Primitive data types: <tt>int</tt>
+		(32-bit signed integer) and <tt>void</tt>. 
+		</li><li>Structured types: Classes and
+		one-dimensional arrays. 
+		</li><li>Assignment. 
+		</li><li>Conditionals: <tt>if/else</tt>. 
+		</li><li>Iteration: <tt>while</tt>. 
+		</li><li>Methods and method calls. 
+		</li><li>Arithmetic: <tt>+, -, *, /, %</tt>.
+		</li><li>Relational operators: 
+		    <tt>&lt;, &gt;, &lt;=, &gt;=, ==, !=</tt>. 
+		</li><li>Boolean operators: 
+		    <tt>&amp;&amp;, ||, !</tt>. 
+		</li><li>Integer input/output: <tt>print, read</tt>. 
+	</li></ol>
+	<p>
+	
+	In order to make the compiler construction process tractable for
+	a semester course, many important features of Java are omitted from
+	Decaf. These include inheritance, exceptions, interfaces, static
+	members, constructors, multidimensional arrays, threads, other
+	conditional and iteration statements (like <tt>switch</tt> 
+	and <tt>for</tt>),
+	access modifiers (<tt>public, private, protected</tt>), garbage
+	collection, and package (library) support. 
+	</p><p>
+
+	Here is a sample Decaf program that computes the greatest common
+	divisor of two numbers entered by the user (the <tt>gcd</tt> method
+	implements Euclid's algorithm): 
+	</p><p>
+
+	</p><pre>	    class Example {
+                void main() {
+                    int x; int y;
+                    x = read();
+                    y = read();
+                    print(gcd(x, y));
+                }
+                int gcd(int a, int b) {
+                    if ( b == 0 )
+                        return a;
+                    else
+                        return gcd(b, a % b);
+                }
+            }
+         </pre>
+	 <p>
+
+	The following Decaf program creates a linked list: 
+	</p><p>
+
+	</p><pre>            
+	    class ListNode {
+                int data;
+                ListNode next;
+                void setData(int x) {
+                    data = x;
+                }
+            }
+            class List {
+                ListNode head;
+                void show(ListNode list) {
+                    ListNode cursor;
+                    int count;
+                    count = 0;
+                    cursor = list;
+                    while ( cursor != null ) {
+                        count = count + 1;
+                        print(count, cursor.data);
+                        cursor = cursor.next;
+                    }
+                }
+                void main() {
+                    ListNode second;
+                    ListNode third;
+                    head = new ListNode();
+                    head.setData(4);  //  Could use "head.data = 4;"
+                    print(head.data);
+                    second = new ListNode();
+                    second.setData(5);
+                    print(second.data);
+                    third = new ListNode();
+                    third.setData(11);
+                    print(third.data);
+                    head.next = second;
+                    second.next = third;
+                    third.next = null;
+                    show(head);
+                }
+            }
+         </pre>
+
+	<h2><li><a name="notation"></a>Notation</li></h2>
+	<p>
+
+	The following notational conventions are used throughout this
+	document: 
+	</p><p>
+
+	</p><ol>
+		<li>Nonterminal symbols are denoted
+		by all uppercase italics; for example, <i>CLASS</i>. 
+
+		</li><li>Terminal symbols, operator
+		symbols, and keywords are denoted by boldface; for example,
+		<b>identifier</b>. 
+
+		</li><li>&lt; ... &gt;<sup>*</sup> means zero or more 
+		occurrences of the item within the angle braces; for
+		example, <b>a</b><sup>*</sup> means zero or more 
+		occurrences of <b>a</b>.
+
+		</li><li>&lt; ... &gt;<sup>+</sup> means
+		one or more occurrences of the item within the angle 
+		braces; for example, <b>a</b><sup>+</sup> means one 
+		or more occurrences of <b>a</b>.
+
+        <!--
+		<LI>&lt; ... &gt;<SUP>?</SUP> means zero or one occurrences 
+		of the item within the angle braces; for example, 
+		<B>a</B><SUP>?</SUP> means zero or one occurrences of <B>a</B>.
+        -->
+
+		</li><li>The empty string is denoted by <i>epsilon</i>. 
+	</li></ol>
+	<p>
+
+	</p><h2><li><a name="syntax"></a>Decaf Syntax</li></h2>
+	<p>
+
+	</p><ol>
+		<h3><li>Decaf Grammar</li></h3>
+		<table border="0" cellpadding="2" cellspacing="0" width="728">
+			<colgroup><col width="28">
+			<col width="209">
+			<col width="37">
+			<col width="438">
+			</colgroup><tbody><tr valign="TOP">
+				<td sdnum="1033;0;@" width="28">
+					<p align="RIGHT">1. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>PROGRAM</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><i>CLASS_DECLARATION</i><sup>+</sup></p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdnum="1033;0;@" width="28">
+					<p align="RIGHT">2. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>CLASS_DECLARATION</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt> 
+					</p>
+				</td>
+				<td width="438">
+					<p><b><tt>class</tt> identifier</b> <i>CLASS_BODY</i></p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdnum="1033;0;@" width="28">
+					<p align="RIGHT">3. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>CLASS_BODY</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><b>{</b> <i>VAR_DECLARATION</i><sup>*</sup>
+					<i>METHOD_DECLARATION</i><sup>*</sup> <b>}</b></p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdnum="1033;0;@" width="28">
+					<p align="RIGHT">4. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>VAR_DECLARATION</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><i>TYPE</i> <b>identifier ;</b> 
+					</p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdnum="1033;0;@" width="28">
+					<p align="RIGHT">5. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>TYPE</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><i>SIMPLE_TYPE</i> 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><i>SIMPLE_TYPE</i><tt><b>[]</b></tt> 
+					</p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdnum="1033;0;@" width="28">
+					<p align="RIGHT">6. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>SIMPLE_TYPE</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><tt><b>int</b></tt> 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><b>identifier</b> 
+					</p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdnum="1033;0;@" width="28">
+					<p align="RIGHT">7. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>METHOD_DECLARATION</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><i>RESULT_TYPE</i> <b>identifier</b> <b>(</b> <i>PARAMETER_LIST</i>
+					<b>)</b> <i>METHOD_BODY</i></p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdnum="1033;0;@" width="28">
+					<p align="RIGHT">8. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>RESULT_TYPE</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><i>TYPE</i></p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><tt><b>void</b></tt> 
+					</p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdnum="1033;0;@" width="28">
+					<p align="RIGHT">9. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>PARAMETER_LIST</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><i>epsilon</i> 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><i>PARAMETER</i> &lt; <b>,</b> <i>PARAMETER</i> &gt;<sup>*</sup>
+										</p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdnum="1033;0;@" width="28">
+					<p align="RIGHT">10. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>PARAMETER</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><i>TYPE</i> <b>identifier</b> 
+					</p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdnum="1033;0;@" width="28">
+					<p align="RIGHT">11. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>METHOD_BODY</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><tt><b>{</b></tt> <i>LOCAL_VAR_DECLARATION</i><sup>*</sup>
+					<i>SIMPLE_STATEMENT</i><sup>*</sup> <tt><b>}</b></tt> 
+					</p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdnum="1033;0;@" width="28">
+					<p align="RIGHT">12. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>LOCAL_VAR_DECLARATION</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><i>TYPE</i> <b>identifier ;</b> 
+					</p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdnum="1033;0;@" width="28">
+					<p align="RIGHT">13. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>STATEMENT</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><i>SIMPLE_STATEMENT</i> 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><b>{</b> <i>SIMPLE_STATEMENT</i><sup>+</sup> <b>}</b> 
+					</p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdnum="1033;0;@" width="28">
+					<p align="RIGHT">14. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>SIMPLE_STATEMENT</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><tt><b>;</b></tt> 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><i>NAME</i> <b>=</b> <i>EXPRESSION</i> <b>;</b> 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><i>NAME</i> <b>(</b> <i>ARG_LIST</i> <b>) ;</b></p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><tt><b>print</b></tt> <b>(</b> <i>ARG_LIST</i> <b>) ;</b></p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><i>CONDITIONAL_STATEMENT</i> 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><tt><b>while (</b></tt> <i>EXPRESSION</i> <tt><b>)</b></tt>
+					<i>STATEMENT</i> 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><tt><b>return</b></tt> <i>OPTIONAL_EXPRESSION</i> <b>;</b></p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdnum="1033;0;@" width="28">
+					<p align="RIGHT">15. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>NAME</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><i>VARIABLE_ACCESS</i> 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209">
+					<p><br>
+					</p>
+				</td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><i>VARIABLE_ACCESS</i><b>.</b><i>FIELD_ACCESS</i> 
+					</p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td width="28">
+					<p align="RIGHT">16. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>VARIABLE_ACCESS</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><tt><b>this</b></tt> 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><b>identifier</b></p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><b>identifier [</b><i>EXPRESSION</i><b>]</b></p>
+				</td>
+			</tr>
+			<tr>
+				<td width="28">
+					<p align="RIGHT">17. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>FIELD_ACCESS</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><b>identifier</b></p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28">
+					<p align="LEFT"><br>
+					</p>
+				</td>
+				<td width="209">
+					<p><br>
+					</p>
+				</td>
+				<td width="37">
+					<p>|</p>
+				</td>
+				<td width="438">
+					<p><b>identifier [</b><i>EXPRESSION</i><b>]</b></p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdnum="1033;0;@" width="28">
+					<p align="RIGHT">18. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>ARG_LIST</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><i>epsilon</i></p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><i>EXPRESSION</i> &lt; <b>,</b> <i>EXPRESSION</i> &gt;<sup>*</sup></p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdnum="1033;0;@" width="28">
+					<p align="RIGHT">19. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>CONDITIONAL_STATEMENT</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><tt><b>if (</b></tt> <i>EXPRESSION</i> <b>)</b> <i>STATEMENT</i>
+										</p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><tt><b>if (</b></tt> <i>EXPRESSION</i> <b>)</b> <i>STATEMENT</i>
+					<tt><b>else</b></tt> <i>STATEMENT</i> 
+					</p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdnum="1033;0;@" width="28">
+					<p align="RIGHT">20. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>OPTIONAL_EXPRESSION</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><i>epsilon</i></p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><i>EXPRESSION</i></p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdnum="1033;0;@" width="28">
+					<p align="RIGHT">21. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>EXPRESSION</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><i>NAME</i></p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><b>number</b></p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><tt><b>null</b></tt></p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><i>NAME</i> <b>(</b> <i>ARG_LIST</i> <b>)</b></p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><tt><b>read</b></tt> <b>()</b></p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><i>NEW_EXPRESSION</i></p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><i>UNARY_OP EXPRESSION</i></p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><i>EXPRESSION RELATION_OP EXPRESSION</i></p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><i>EXPRESSION SUM_OP EXPRESSION</i></p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><i>EXPRESSION PRODUCT_OP EXPRESSION</i></p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><b>(</b> <i>EXPRESSION</i> <b>)</b> 
+					</p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdval="22" sdnum="1033;0;@" width="28">
+					<p align="RIGHT">22. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>NEW_EXPRESSION</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><b><tt>new</tt> identifier ()</b> 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><tt><b>new int [</b></tt> <i>EXPRESSION</i> <tt><b>]</b></tt>
+										</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><b><tt>new</tt> identifier <tt>[</tt></b> <i>EXPRESSION</i> <tt><b>]</b></tt>
+										</p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdnum="1033;0;@" width="28">
+					<p align="RIGHT">23. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>UNARY_OP</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><tt><b>+</b></tt> 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><tt><b>-</b></tt> 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><tt><b>!</b></tt> 
+					</p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdnum="1033;0;@" width="28">
+					<p align="RIGHT">24. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>RELATION_OP</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><tt><b>==</b></tt> 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><tt><b>!= </b></tt>
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><tt><b>&lt;=</b></tt> 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><tt><b>&gt;=</b></tt> 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><tt><b>&lt;</b></tt> 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><tt><b>&gt;</b></tt> 
+					</p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdval="25" sdnum="1033;0;@" width="28">
+					<p align="RIGHT">25. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>SUM_OP</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><tt><b>+</b></tt> 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><tt><b>-</b></tt> 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><tt><b>||</b></tt> 
+					</p>
+				</td>
+			</tr>
+			<tr valign="TOP">
+				<td sdval="26" sdnum="1033;0;@" width="28">
+					<p align="RIGHT">26. 
+					</p>
+				</td>
+				<td width="209">
+					<p><i>PRODUCT_OP</i></p>
+				</td>
+				<td width="37">
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td width="438">
+					<p><tt><b>*</b></tt> 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28">
+					<p align="RIGHT"><br>
+					</p>
+				</td>
+				<td width="209">
+					<p><br>
+					</p>
+				</td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><tt><b>/</b></tt> 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><tt><b>%</b></tt> 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td sdnum="1033;0;@" width="28"></td>
+				<td width="209"></td>
+				<td width="37">
+					<p>| 
+					</p>
+				</td>
+				<td width="438">
+					<p><tt><b>&amp;&amp;</b></tt> 
+					</p>
+				</td>
+			</tr>
+		</tbody></table>
+		<p>
+
+		</p><h3><li>Operator Precedence</li></h3>
+		<p>
+
+		Operator precedence is as follows (from highest to
+		lowest):
+		</p><p>
+
+		</p><ol>
+			<li><i>UNARY_OP</i> 
+			</li><li><i>PRODUCT_OP</i> 
+			</li><li><i>SUM_OP</i> 
+			</li><li><i>RELATION_OP</i> 
+		</li></ol>
+		<p>
+		
+		Within each group of operators each operator has the same
+		precedence; for example, <tt>+</tt>, <tt>-</tt>, 
+		and <tt>||</tt> have the same precedence. 
+		</p><p>
+
+		</p><h3><li>Operator Associativity</li></h3> <p>
+
+		All operators associate left-to-right; for example,
+		<tt>a + b + c</tt> is interpreted as <tt>(a + b) + c</tt>.
+		</p><p>
+
+	</p></ol>
+
+	<h2><li><a name="lexical"></a>Lexical Conventions</li></h2>
+	<p>
+
+	The Decaf language observes the following lexical conventions:
+	</p><p>
+
+	</p><ol>
+
+		<li>Comments begin with the characters <tt>//</tt>. All
+		text after the <tt>//</tt> until the end of the line is
+		ignored by the compiler.  <p>
+
+		</p></li><li>Identifers are unlimited sequences of letters,
+		numbers, and the underscore <tt>_</tt> character. They
+		must begin with a letter. (Note: Unlike Decaf,
+		Java permits an idenitifier to begin with an
+		underscore.) Formally:
+
+		<p>
+		<table cellpadding="2" cellspacing="2">
+			<tbody><tr>
+				<td>
+					<p>letter</p>
+				</td>
+				<td>
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td>
+					<p>[a-z] | [A-Z]</p>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<p>digit</p>
+				</td>
+				<td>
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td>
+					<p>[0-9]</p>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<p>alpha</p>
+				</td>
+				<td>
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td>
+					<p>letter | digit | _ 
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<p>identifier</p>
+				</td>
+				<td>
+					<p><tt>--&gt;</tt></p>
+				</td>
+				<td>
+					<p>letter alpha<sup>*</sup></p>
+				</td>
+			</tr>
+		</tbody></table>
+		</p><p>
+
+		</p></li><li>Numbers are unsigned quantities of one or more
+		digits. A negative number can be constructed using the
+		unary <tt>-</tt> operator.
+		<p>
+
+		<table>
+			<tbody><tr>
+				<td>
+					<p>number</p>
+				</td>
+				<td>
+					<p align="CENTER"><tt>--&gt;</tt></p>
+				</td>
+				<td>
+					<p>digit<sup>*</sup></p>
+				</td>
+			</tr>
+		</tbody></table>
+		</p><p>
+
+		</p></li><li>The following set of words are reserved keywords
+		in the Decaf language. It is a compile time error to
+		declare an identifier to have the name of a keyword.  
+		<p>
+
+		</p><pre>                        
+		        class     else      if        int
+                        new       null      print     read      
+                        return    this      void      while
+                </pre>
+		 <p>
+
+		</p></li><li>The following symbols are used in Decaf as operators,
+		grouping symbols, comment specifiers, and delimiters: 
+		<p>
+
+		</p><pre>		        [         ]         {         }
+                        !=        ==        &lt;         &gt;
+                        &lt;=        &gt;=        &amp;&amp;        ||
+                        !         +         -         *
+                        /         %         ;         ,
+                        (         )         =         //
+                        .
+                 </pre>
+		<p>
+
+		</p></li><li>White space consists of blanks, tabs, and end-of-line
+		characters. White space may be used to mark the end of a symbol,
+		keyword, identifier, or other token. However, with the exception
+		delimiting the beginning and ending of a keyword, white space is
+		not required. For example, <tt>a&amp;&amp;b</tt> is a legitimate
+		lexical sequence that should be broken into the tokens 
+		<b>identifier</b>,
+		<b>conditional and</b>, and <b>identifier</b>. 
+		White space is <i>not</i>
+		passed to the parser. 
+	</li></ol>
+	<p>
+
+	</p><h2><li><a name="types"></a>Types</li></h2>
+	<p>
+
+	</p><ol>
+		<h3><li>Primitive Types</li></h3>
+		<p>
+
+		Decaf has two primitive types: 
+		</p><p>
+		</p><ol>
+			<li><tt>int</tt>: a 32-bit signed
+			integer, and 
+			<p>
+
+			</p></li><li><tt>void</tt>: a degenerate type used to indicate that a
+			method returns no value. 
+		</li></ol>
+		<p>
+
+		</p><h3><li>Structured Types</li></h3>
+		<p>
+
+		Decaf has two structured types: 
+		</p><p>
+
+		</p><ol>
+			<li><b>Classes</b>. A class consists
+			of a set of instance variables and a set of methods that operate
+			on these instance variables. A program creates instances of
+			classes called <i>objects</i>. A program accomplishes its
+			designated task by calling methods associated with variouus
+			objects. 
+			<p>
+
+			</p></li><li><b>Arrays</b>. Decaf arrays are one-dimensional homogeneous
+			arrays that may consist of integers or instances of a
+			programmer-defined class. Mulidimensional arrays are not supported
+			in Decaf. 
+		</li></ol>
+		<p>
+
+		</p><h3><li>References</li></h3>
+		<p>
+		
+		All array and class variables (objects) in Decaf are reference
+		variables. When a variable is declared, space is allocated 
+		for a
+		reference, but no space is allocated for an object. The programmer
+		must explicitly create an object with the <tt>new</tt> operator and
+		then assign the reference that <tt>new</tt> returns to the
+		appropriate variable. Java works exactly the same way. When an
+		object is no longer referenced by any variable, it becomes garbage;
+		Java would properly collect the garbage, but Decaf simply ignores
+		the object. This failure to reclaim storage should pose no problem
+		for most of the Decaf programs you will write. 
+		</p>
+		<p>The following code performs the actions indicated by the
+		comments: 
+		</p>
+		<hr>
+		<pre>                class Foo {  //  Declare a class named Foo
+                    int key;
+                }
+                
+                Foo a;   //  Declare a couple of variables that may
+                Foo b;   //  reference objects of type Foo
+
+                a = new Foo();  //  Create a Foo object and assign the
+                                //  reference to variable a
+                b = a;          //  b references the same Foo object as a
+
+                a.key = 10;
+                print(b.key);   //  10 gets printed
+
+                a = new Foo();  //  a and b will now reference different
+                b = new Foo();  //  objects
+            </pre>
+		<hr>
+		<p>
+		
+		Parentheses appear after the variable name when a class object
+		is created with <tt>new</tt>. Java requires this since the use of
+		<tt>new</tt> actually calls a constructor, and arguments can be
+		supplied if needed. Decaf does not implement constructors, but the
+		parentheses remain so Decaf code looks more like Java code. 
+	</p></ol>
+	<p>
+	</p><h2><li><a name="classes"></a>Classes</li></h2>
+	<p>
+	
+	A class declaration creates a new class type and specifies its
+	implementation. The identifier immediately after the <tt>class</tt>
+	keyword defines the name of the class. The class body then defines
+	the implementation by possibly declaring a set of instance variables
+	and a set of methods. 
+	</p><p>
+	<table cellpadding="2" cellspacing="2">
+		<tbody><tr valign="TOP">
+			<td>
+				<p align="RIGHT">2. 
+				</p>
+			</td>
+			<td>
+				<p><i>CLASS_DECLARATION</i></p>
+			</td>
+			<td>
+				<p><tt>--&gt;</tt> 
+				</p>
+			</td>
+			<td>
+				<p><b><tt>class</tt> identifier</b> <i>CLASS_BODY</i></p>
+			</td>
+		</tr>
+		<tr valign="TOP">
+			<td>
+				<p align="RIGHT">3. 
+				</p>
+			</td>
+			<td>
+				<p><i>CLASS_BODY</i></p>
+			</td>
+			<td>
+				<p><tt>--&gt;</tt></p>
+			</td>
+			<td>
+				<p><b>{</b> <i>VAR_DECLARATION</i><sup>*</sup>
+				<i>METHOD_DECLARATION</i><sup>*</sup> <b>}</b></p>
+			</td>
+		</tr>
+	</tbody></table>
+	</p><p>
+	
+	The body of a class is delimited by curly braces. There is no
+	semicolon after the class body. Java allows variable and method
+	declarations to be intermixed, but for simplicity Decaf requires
+	that all instance variable declarations precede all method
+	declarations. 
+	</p><p>
+	
+	<b>Variable Declarations</b>. Java supports multiple variable
+	declarations (variables separated by commas) in a single declaration
+	and variable initialization. Decaf allows only one variable to be
+	declared at a time and omits variable initializers. Decaf also omits
+	<i>class variables</i> (refered to as <tt>static</tt> in Java). 
+	</p><p>
+
+	Integer instance variables should be automatically initialized to
+	zero (0), and reference variables should be initialized to <tt>null</tt>.
+	</p><p>
+
+	<b>Types</b>. A valid type for a
+	variable is either the primitive type <tt>int</tt>, a <i>previously</i>
+	defined class, or an array type. The current class is considered to
+	be a previously defined class, so the type of an instance variable
+	may be the class being defined. For example, the following
+	definition is valid: 
+	</p><p>
+	</p><hr>
+	<pre>            class TreeNode {
+                int key;
+                TreeNode left_child;
+                TreeNode right_child;
+            }
+         </pre>
+	<hr>
+	<p>
+	
+	Unlike C/C++, Java allows the square brackets of an array
+	declaration to be placed after the type, instead of after the
+	variable (Java also allows the C/C++ style of brackets after the
+	variable). Decaf requires the brackets to be placed after the type.
+	Also unlike C/C++, Java does not specify a size at the point of
+	declaration; the size is provided when the <tt>new</tt> operator is
+	used. Consequently, an array variable may reference different length
+	arrays over its lifetime. Example array declarations include: 
+	</p><p>
+	</p><hr>
+	<pre>            int[] a;            //  Declare a
+            Foo[] f;            //  Declare f
+            a = new int[10];    //  Allocate array object a
+            f = new Foo[1000];  //  Allocate array object f
+         </pre>
+	<hr>
+	<p>
+	
+	<b>Identifier names</b>. It is <i>not</i> an error to assign a
+	variable the same name as a previously or subsequently defined class
+	name (although it is poor programming style). 
+	</p><p>
+	
+	<b>Method Declarations.</b> A method is similar to a function in
+	conventional imperative languages. A method is a block of code that
+	can be invoked with zero or more values as arguments. Unlike a
+	traditional function, a method belongs to a particular class, and
+	its definition must appear within the body of a class definition. 
+	</p><p>
+	
+	Java supports special methods called constructors that
+	automatically initialize an object when <tt>new</tt> is invoked. For
+	simplicity, Decaf does not have constructors. 
+	</p><p>
+	
+	Java supports method overloading; that is, multiple methods with
+	the same name but different parameter lists. For simplicity, Decaf
+	does not support method overloading, so it is a compile time error
+	if two methods in a class have the same name. 
+	</p><p>
+	In Decaf, unlike Java, methods and instance variables must have
+	unique names; that is, in Decaf it is illegal to have an instance
+	variable and a method with the same name within the same class.
+	</p><p>
+	
+	<b>Return Types</b>. If a method does not return a value, its
+	return type should be declared <tt>void</tt>. If the return type is
+	an array type, Decaf requires the empty brackets be placed <i>after</i>
+	the type name. For example: 
+	</p><p>
+	</p><hr>
+	<pre>                int[] foo(int a, int b) { . . . }  //  Correct
+
+                int foo[](int a, int b) { . . . }  //  Incorrect
+
+                int foo(int a, int b)[] { . . . }  //  Incorrect
+         </pre>
+	<hr>
+	<p>
+	
+	<b>Parameters</b>. Parameters are considered local variables of
+	the method (that is, they are in the method's namespace). They may
+	not be overridden by other local variables, and it is a compile time
+	error to attempt to do so. 
+	</p><p>
+	
+	Parameters are passed by value. Thus, integer arguments are
+	copied to their corresponding parameters and that reference
+	arguments are copied to their corresponding parameters. 
+	</p><p>
+	
+	<tt><b>this</b></tt>. The keyword <tt>this</tt> may be used
+	within a method to reference the current object. <tt>this</tt> is
+	useful for referencing shadowed variables or methods (that is,
+	variables or methods in the current object that are masked by
+	identically named local variables or parameters in the method) or
+	for passing the current object as an argument to another object's
+	method. For example: 
+	</p>
+	<hr>
+	<pre>                class Example {
+                    int key;
+                    int foo;
+                    void setKey(int key, AnotherClass obj) {
+                        this.key = key;   //  key is a local variable
+                                          //  (actually a parameter) that
+                                          //  masks an instance variable
+                                          //  so this must be used
+                        foo = key;        //  foo == this.foo but key
+                                          //  is the parameter key
+                        obj.notify(this); //  Pass the current object to
+                                          //  the method of another
+                                          //  object
+                    }
+                }
+         </pre>
+	<hr>
+	<p>
+	
+	As illustrated above, the expression "<tt>this.</tt>"
+	is appended implicitly to any non-shadowed instance variable or
+	method of the current object. If a local variable has the same name
+	as an instance variable or method, then the programmer must
+	explicitly preface the instance variable or method name with "<tt>this.</tt>"
+	in order to access the shadowed instance variable or method. 
+	</p><p>
+
+	<b>Body of Methods</b>. The body of a method consists of a
+	sequence of local variable declarations followed by statements: 
+	</p><p>
+	<table cellpadding="2" cellspacing="2">
+		<tbody><tr valign="TOP">
+			<td>
+				<p align="RIGHT">11. 
+				</p>
+			</td>
+			<td>
+				<p><i>METHOD_BODY</i></p>
+			</td>
+			<td>
+				<p><tt>--&gt;</tt> 
+				</p>
+			</td>
+			<td>
+				<p><tt><b>{</b></tt> <i>LOCAL_VAR_DECLARATION</i><sup>*</sup>
+				<i>SIMPLE_STATEMENT</i><sup>+</sup> <tt><b>}</b></tt> 
+				</p>
+			</td>
+		</tr>
+	</tbody></table>
+	</p><p>
+	
+	Unlike Java, Decaf requires that all local variable declarations
+	precede any statement. Java allows declarations and statements to be
+	intermixed. The syntax for local declarations is identical to that
+	for instance variables: one variable per declararion and no
+	initialization. 
+	</p><p>
+	
+	Unlike Java, Decaf <i>does</i> automatically assign zero (0) to
+	local integers does automatically assign <tt>null</tt> to local
+	reference variables. This permits a run time check for uninitialized
+	references. (Java checks for uninitialized variables at compile
+	time.) 
+	</p><p>
+
+	</p><h2><li><a name="namespaces"></a>Namespaces</li></h2>
+	<p>
+	
+	There are only two namespaces in Decaf---the method namespace and
+	the class namespace. When a variable is declared in a method body it
+	is placed in the method's namespace. 
+	</p><p>
+	
+	A local variable's declaration is in force throughout the body of
+	the method in which it is declared. If an identifier previously
+	declared as an instance variable or method in the enclosing class,
+	then the other declaration is hidden for the remainder of the method
+	body. <tt>this</tt> must be used to access these hidden instance
+	variables and methods. 
+	</p><p>
+	
+	<b>Type scope</b>. Unlike Java, an identifier with the same name
+	as a previously defined class does not hide the class name. Hence,
+	the previously defined class name can still be used as a type name.
+	In other words, a type name always remains in force. 
+	</p><p>
+	
+	<b>Variable Name Resolution Summary</b>. The compiler should
+	resolve a variable reference by looking first in the method
+	namespace. If the variable cannot be found in the method namespace,
+	the compiler should search the enclosing class's namespace. If the
+	variable is found in neither the method namespace nor the enclosing
+	class's namespace, then the variable is considered undeclared and a
+	compile time error should be generated. 
+	</p><p>
+
+	</p><h2><li><a name="statements"></a>Statements</li></h2>
+	<p>
+	
+	Decaf statements do not have values; they are evaluated only for
+	their effect. In Decaf (unlike Java) this restriction extends to
+	assignment. For example, in Java one can write expressions such as <tt>a
+	= b = c</tt> or <tt>(a = b)[3]</tt>. Such statements are illegal in
+	Decaf since an assignment statement has no value. 
+	</p><p>
+	
+	Statements may be one of the following: 
+	</p><p>
+	<table cellpadding="2" cellspacing="2">
+		<tbody><tr valign="TOP">
+			<td>
+				<p align="RIGHT">14. 
+				</p>
+			</td>
+			<td>
+				<p><i>SIMPLE_STATEMENT</i></p>
+			</td>
+			<td>
+				<p><tt>--&gt;</tt> 
+				</p>
+			</td>
+			<td>
+				<p><tt><b>;</b></tt> 
+				</p>
+			</td>
+		</tr>
+		<tr>
+			<td></td>
+			<td></td>
+			<td>
+				<p>| 
+				</p>
+			</td>
+			<td>
+				<p><i>NAME</i> <b>=</b> <i>EXPRESSION</i> <b>;</b> 
+				</p>
+			</td>
+		</tr>
+		<tr>
+			<td></td>
+			<td></td>
+			<td>
+				<p>| 
+				</p>
+			</td>
+			<td>
+				<p><i>NAME</i> <b>(</b> <i>ARG_LIST</i> <b>) ;</b></p>
+			</td>
+		</tr>
+		<tr>
+			<td></td>
+			<td></td>
+			<td>
+				<p>| 
+				</p>
+			</td>
+			<td>
+				<p><tt><b>print</b></tt> <b>(</b> <i>ARG_LIST</i> <b>) ;</b></p>
+			</td>
+		</tr>
+		<tr>
+			<td></td>
+			<td></td>
+			<td>
+				<p>| 
+				</p>
+			</td>
+			<td>
+				<p><i>CONDITIONAL_STATEMENT</i> 
+				</p>
+			</td>
+		</tr>
+		<tr>
+			<td></td>
+			<td></td>
+			<td>
+				<p>| 
+				</p>
+			</td>
+			<td>
+				<p><tt><b>while (</b></tt> <i>EXPRESSION</i> <tt><b>)</b></tt>
+				<i>STATEMENT</i> 
+				</p>
+			</td>
+		</tr>
+		<tr>
+			<td></td>
+			<td></td>
+			<td>
+				<p>| 
+				</p>
+			</td>
+			<td>
+				<p><tt><b>return</b></tt> <i>OPTIONAL_EXPRESSION</i> <b>;</b></p>
+			</td>
+		</tr>
+	</tbody></table>
+	</p><p>
+	
+	<b>Empty Statement</b>. The semicolon by itself represents an
+	empty statement. It does nothing. 
+	</p><p>
+	
+	<b>Assignment</b>. An assignment statement evaluates an
+	expression and assigns the result to a variable: 
+	</p><p>
+	
+	<i>NAME</i> <b>=</b> <i>EXPRESSION</i> <b>;</b> 
+	</p><p>
+	
+	A <i>NAME</i> is either the reserved keyword <tt>this</tt>, an
+	identifer, a field access via the dot notation, or an array access: 
+	</p><p>
+	<table border="0" cellpadding="2" cellspacing="0" width="477">
+		<colgroup><col width="28">
+		<col width="143">
+		<col width="23">
+		<col width="266">
+		</colgroup><tbody><tr valign="TOP">
+			<td width="28">
+				<p align="RIGHT">15. 
+				</p>
+			</td>
+			<td width="143">
+				<p><i>NAME</i></p>
+			</td>
+			<td width="23">
+				<p><tt>--&gt;</tt> 
+				</p>
+			</td>
+			<td width="266">
+				<p><i>VARIABLE_ACCESS</i> 
+				</p>
+			</td>
+		</tr>
+		<tr>
+			<td width="28"></td>
+			<td width="143"></td>
+			<td width="23">
+				<p>| 
+				</p>
+			</td>
+			<td width="266">
+				<p><i>VARIABLE_ACCESS</i><b>.</b><i>FIELD_ACCESS</i> 
+				</p>
+			</td>
+		</tr>
+		<tr valign="TOP">
+			<td width="28">
+				<p align="RIGHT">16. 
+				</p>
+			</td>
+			<td width="143">
+				<p><i>VARIABLE_ACCESS</i></p>
+			</td>
+			<td width="23">
+				<p><tt>--&gt;</tt> 
+				</p>
+			</td>
+			<td width="266">
+				<p><tt><b>this</b></tt> 
+				</p>
+			</td>
+		</tr>
+		<tr>
+			<td width="28"></td>
+			<td width="143"></td>
+			<td width="23">
+				<p>| 
+				</p>
+			</td>
+			<td width="266">
+				<p><b>identifier</b></p>
+			</td>
+		</tr>
+		<tr>
+			<td width="28"></td>
+			<td width="143"></td>
+			<td width="23">
+				<p>| 
+				</p>
+			</td>
+			<td width="266">
+				<p><b>identifier [</b><i>EXPRESSION</i><b>]</b></p>
+			</td>
+		</tr>
+		<tr>
+			<td width="28">
+				<p align="RIGHT">17. 
+				</p>
+			</td>
+			<td width="143">
+				<p><i>FIELD_ACCESS</i></p>
+			</td>
+			<td width="23">
+				<p><tt>--&gt;</tt> 
+				</p>
+			</td>
+			<td width="266">
+				<p><b><tt>identifier</tt></b></p>
+			</td>
+		</tr>
+		<tr>
+			<td width="28"></td>
+			<td width="143"></td>
+			<td width="23">
+				<p>| 
+				</p>
+			</td>
+			<td width="266">
+				<p><b>identifier [</b><i>EXPRESSION</i><b>]</b></p>
+			</td>
+		</tr>
+	</tbody></table>
+	</p><p>
+	
+	Note that array accesses may occur in either half of a dotted
+	name. For example, both <tt>a[3].b</tt> and c.d[2] are legal names. 
+	</p><p>
+	
+	<b>Method Calls</b>. A method call consists of the name of the
+	method name and a list of zero or more comma-separated arguments.
+	The name may be a dotted name; for example, <tt>obj.f(3, x)</tt> A
+	Decaf program may ignore the return value of a method which is not
+	declared <tt>void</tt>. For example, if <tt>foo</tt> returns 
+	an <tt>int</tt>,
+	then both of the following statements are valid: 
+	</p><p>
+
+	</p><hr>
+	<pre>        
+	       stack[3].foo(5, 10);
+               x = stack[3].foo(5, 10);
+	</pre>
+	<p>
+	
+	<b>Output</b>. The <tt>print</tt> operator writes zero or more
+	integers to the screen. Each displayed value is followed
+    by a blank space.  
+    The arguments to <tt>print</tt> must all be
+	integer-valued expressions. A <tt>print</tt> operator with no
+	arguments prints a new line; thus, a <tt>print</tt> operator with no
+	arguments may be used to obtain a blank line in the output. 
+	</p><p>
+    For example, the code fragment
+    </p><p>
+	</p><pre>        
+       print(34, 4, 2, 15);
+       print();
+       print(34, 4, 2, 15);
+       print(15);
+       print(16);
+       print();
+       print(-4);
+       print();
+       print();
+       print(-4);
+	</pre>
+	<p>
+    would display
+	</p><p>
+	</p><pre>        
+       34 4 2 15
+       34 4 2 15 15 16
+       -4
+       
+       -4
+	</pre>
+	<p>
+    There
+	is no way to display a string of characters. 
+	</p><p>
+	
+	Decaf's technique of handling input and output is different from
+	Java's. Decaf builds the input and output commands into the
+	language; Java uses library commands for I/O. Java's libraries are
+	more flexible since developers can write new I/O routines to match
+	the needs of their applications or handle new I/O devices. Since
+	Decaf was devised to teach the concepts of compiler construction and
+	is not meant to be a production language, the limitations of Decaf's
+	I/O is acceptable. 
+	</p><p>
+	
+	<b>Conditional Statements</b>. For simplicity, Decaf does not
+	support the <tt>switch</tt> construct of Java. It does support the
+	<tt>if/else</tt> statement: 
+	</p>
+	<table cellpadding="2" cellspacing="2">
+		<tbody><tr valign="TOP">
+			<td sdval="19" sdnum="1033;0;@">
+				<p align="RIGHT">19. 
+				</p>
+			</td>
+			<td>
+				<p><i>CONDITIONAL_STATEMENT</i></p>
+			</td>
+			<td>
+				<p><tt>--&gt;</tt> 
+				</p>
+			</td>
+			<td>
+				<p><tt><b>if (</b></tt> <i>EXPRESSION</i> <b>)</b> <i>STATEMENT</i>
+								</p>
+			</td>
+		</tr>
+		<tr valign="TOP">
+			<td></td>
+			<td></td>
+			<td>
+				<p>| 
+				</p>
+			</td>
+			<td>
+				<p><tt><b>if (</b></tt> <i>EXPRESSION</i> <b>)</b> <i>STATEMENT</i>
+				<tt><b>else</b></tt> <i>STATEMENT</i> 
+				</p>
+			</td>
+		</tr>
+	</tbody></table>
+	<p>
+	
+	In Decaf, the conditonal expression must evaluate to an <tt>int</tt>.
+	As in C/C++, any integer except 0 is considered to be <i>true</i>, 
+    and 0 is
+	considered <i>false</i>. (Java requires that conditional expression
+	be type <tt>boolean</tt>, but Decaf does not support a <tt>boolean</tt>
+	type.) 
+	</p><p>
+	
+	The dangling <tt>else</tt> problem is resolved by matching an
+	<tt>else</tt> with the closest previous unmatched <tt>if</tt> in the
+	same method body. (Java resolves the dangling <tt>else</tt> the same
+	way.) 
+	</p><p>
+	
+	<b>Iteration</b>. Java supports multiple loop forms, including
+	<tt>while</tt>, <tt>do</tt>, and <tt>for</tt>. For simplicity, Decaf
+	supports only the <tt>while</tt> construct: 
+	</p><p>
+	
+	<tt><b>while (</b></tt> <i>EXPRESSION</i> <tt><b>)</b></tt>
+	<i>STATEMENT</i> 
+	</p><p>
+	
+	The expression in the <tt>while</tt> statement must evaluate to
+	an integer. The statement is executed until the expression evaluates
+	to 0 (that is, <i>false</i>). 
+	</p><p>
+	
+	Java supports <tt>break</tt> and <tt>continue</tt> that alter the
+	normal program flow in a loop. These constructs are convenient but
+	are not absolutely necessary, and thus they have been omitted from
+	Decaf to make it more managable. 
+
+	</p><p><b>Return Statement</b>. Values are returned from methods via the
+	<tt>return</tt> statement. 
+	</p><p>
+
+	<tt><b>return</b></tt> <i>OPTIONAL_EXPRESSION</i> <b>;</b> 
+	</p><p>
+	
+	The type of the return expression must be identical to the return
+	type of the method in which it is used. It is a compile time error
+	if the types do not agree or for the return expression to have an
+	argument in a <tt>void</tt> method. 
+	</p><p>
+	
+	<b>Compound Statements</b>. A compound statement can be used to
+	group a sequence of statements to be executed as the body 
+	of a <tt>while</tt>
+	of <tt>if</tt> statement. A compound statement is a sequence of
+	statements enclosed in curly braces. Unlike Java, Decaf does not
+	support "inner blocks." In Java, a pair of curly braces
+	within a method body defines an inner block in which variables can
+	be declared which are local to this inner block. Since Decaf
+	supports only two namespaces, method and class, inner blocks for
+	finer control of variable scoping are not supported. 
+	</p><p>
+
+	</p><h2><li><a name="expressions"></a>Expressions</li></h2>
+	<p>
+	
+	Decaf expressions are simpler and therefore less powerful than
+	Java expressions. For example, Java allows object references to be
+	determined by complex expressions, but Decaf requires that object
+	references be determined by variable names. The following
+	expressions are legal in Java but illegal in Decaf:</p>
+	<hr>
+	<p>
+
+	</p><pre>        c = (a = b)[3];      //  c is assigned the contents of b[3] and 
+                             //  a is assigned a reference to the array 
+                             //  pointed to by b
+        c = foo.goo(a,b).x;  //  the object containing field x is determined
+                             //  at runtime by executing the method goo 
+                             //  in the object referenced by object foo
+        </pre>
+	<p>
+	
+	One would use multiple Decaf statements to achieve the effects of
+	each of these single Java statements.</p>
+    <p>
+    Decaf expressions involve the following:
+    </p><p>
+	</p><ul>
+		<li><p>Input</p>
+		<p><tt>read</tt> reads and returns and 32-bit signed 
+        integer from the
+		keyboard. Read is an operator like <tt>print</tt> and
+        <tt>new</tt>; it is neither a function nor a
+		method. It looks and behaves as if it were a function, however.
+		The trailing parentheses emphasize the fact that
+        <tt>read</tt> is not a
+		simple variable.</p>
+		</li><li><p>Arithmetic and Relational Operators</p>
+		<p>The arithmetic and relational operators are straightforward.
+		Integer division (<tt>/</tt>)
+		truncates. For example, <tt>8/3 = 2</tt>.
+		Your compiler must insert code that detects division by zero. If
+		your code detects an attempt to divide by zero, the program should
+		terminate and report the execptional condition.</p>
+		<p>Relational operators should return integer 1 if the expression
+		is true and the integer <tt>0</tt> if
+		the expression is false.</p>
+		</li><li><p>Conditional <b>and</b>, Conditional <b>or</b>, and <b>not</b></p>
+		<p>The conditonal <b>and</b> operator (<tt>&amp;&amp;</tt>)
+		should evaluate only its first operand if the first operand is
+		false (i.e., the integer 0). Similarly, the conditional <b>or</b>
+		(<tt>||</tt>) operator should evaluate
+		only its first operand if the first operand evaluates to true
+		(i.e., any integer except 0). Both conditional <b>and</b> and
+		conditional <b>or</b> operators should return the integer 1 if the
+		expression is true and the integer 0 if the expression is false.</p>
+		<p>The not operator (<tt>!</tt>)
+		should return the integer 0 if the expression is true and the
+		integer 1 if the expression is false.</p>
+		</li><li><p>The <tt>new</tt> Operator</p>
+		<p>The <tt>new</tt> operator creates
+		a new object, initializes all its instance variables to zero or
+		<tt>null</tt> (as appropriate), and
+		returns a reference to the newly created object. 
+		</p>
+		<p><b>Array Allocation</b>. An allocation request for an array
+		object must specify the size of the array. The
+        <tt>new</tt> operator
+		allocates enough space to accommodate the requested number of
+		objects. For example, the allocation request</p>
+		<p><tt>a = new int[10];</tt></p>
+		<p>would be handled by allocating space for 10 integer components
+		(40 bytes).</p>
+		<p>Note that an array variable is <i>not</i> allocated storage when
+		it it declared. The dimension is not specified when the array is
+		declared. An array declaration only allocates space for a reference
+		to the array (4 bytes). Consequently, the only way to allocate
+		space for an array object is to use the <tt>new</tt>
+		operator.</p>
+		</li><li><p>Order of Evaluation</p>
+		<p>All operands in an expression are evaluated left-to-right order,
+		regardless of the precedence of operators. For example, suppose
+		<tt>a[3]</tt> is originally <tt>5</tt>
+		and that the method <tt>obj.foo()</tt>
+		returns <tt>20</tt> and sets <tt>a[3]</tt>
+		to <tt>10</tt>. Then the result of
+		the expression 
+		</p>
+		<p><tt>obj.foo() + (a[3] * a[3])</tt></p>
+		<p>is <tt>20 + (10 * 10)</tt> or <tt>120</tt>
+		(notice that even though the parenthesized expression has greater
+		precedence, the operands are evaluated in left-to-right order).
+		Similarly, all parameters are evaluated in strictly left-to-right
+		order. Specific rules such as these are required because because
+		side effects can cause different results depending on the order in
+		which the operands are evaluated. For example, if the operands in
+		the expression <tt>obj.foo() + (a[3] *
+		a[3])</tt> were evaluated in right-to-left order, the result
+		would be <tt>20 + (5 * 5)</tt> or <tt>45</tt>.
+		Hence, to ensure that Decaf programs generated by different
+		compilers produce the same results, an order of evaluation must be
+		imposed.</p>
+        <p>
+        The Java language specification imposes a strict order
+        of evaluation, unlike C and C++ in which the order of
+        evaluation is unspecified.  To see why this is
+        important, this sequence of C++ code:
+        </p><p>
+</p><pre>      Stack s = new Stack();
+      s.push(3);
+      s.push(5);
+      cout &lt;&lt; s.pop() &lt;&lt; " " &lt;&lt; s.pop() &lt;&lt; endl;
+</pre>
+        <p>
+        will print "3 5" on some compiler/platform
+        combinations and "5 3" on others.
+        </p><p>
+		</p></li><li><p><tt>null</tt> References</p>
+		<p>It is a runtime error to attempt to access the field of a <tt>null</tt>
+		reference. For example, if the statement 
+		</p>
+		<p><tt>obj.x = 2;</tt></p>
+		<p>were executed when <tt>obj</tt> is
+		<tt>null</tt>, the program should be terminated and an error message
+		should be displayed. 
+		</p>
+	</li></ul>
+	<h2><li><a name="arrays"></a>Arrays</li></h2>
+	<p>
+	
+	Decaf arrays are one-dimensional arrays. As in Java, arrays are
+	first-class objects with a single publicly accessible 
+	field called
+	<tt>length</tt>. If the array's length
+	is <i>n</i>, then its components range from 0 to <i>n</i> - 1
+	inclusive. The array subscripts must be integers (i.e., <tt>int</tt>
+	types). A runtime error must be generated and the program terminated
+	if the subscript is out of range.
+	Java behaves similarly by throwing an exception.</p>
+	<p>
+	
+	An array's <tt>length</tt>
+	field may be examined to determine the number of elements
+    in
+	the array. This <tt>length</tt> field is <i>read only</i>; once 
+    <tt>new</tt> is used to
+	allocate the array, its length never changes. The array
+    itself can always
+	be reassigned, of course: it can be assigned to another, already
+	allocated, array, and it can be assigned to the result of invoking
+	the <tt>new</tt> operator again.</p>
+
+	<p>
+	Arrays of zero length can be allocated. In this case, 
+	the <tt>length</tt>
+	field of the array object would be zero, and the array itself would
+	be empty. The array object has a secret instance variable that
+	points to the array components. The only way the programmer can
+	access these components is via square brackets. For example, the
+	fourth element of array <tt>foo</tt>
+	is accessed via the expression <tt>foo[3]</tt>.
+	The <tt>length</tt> field is accessed
+	via the standard dot notation: <tt>foo.length</tt>.</p>
+
+	<p>
+	</p><h2><li><a name="executing"></a>Miscellaneous</li></h2>
+	<p>
+
+	A Decaf program must have exactly one class with a method named
+	<tt>main()</tt>. <tt>main()</tt> should take no arguments, and its 
+	return type is <tt>void</tt>.
+
+	<!--
+	<p>
+	<h2><LI><A NAME="executing"></A>Executing a Decaf Program</h2>
+	<p>
+
+	A Decaf program must have exactly one class with a method named
+	<tt>main()</tt>. <tt>main()</tt>
+	should take no arguments. You execute a compiled Decaf program be
+	executing the command
+	<p>
+
+	<tt>decaf</tt> <b><I>classname</I></b>
+	<p>
+
+	where <B><I>classname</I></B> is the name of the class with the 
+	<tt>main()</tt> method. The <tt>decaf</tt> command
+	allocates an object of type <B><I>classname</I></B> and then calls
+	its <tt>main()</tt> method.
+	-->
+	</p><p>
+</p></ol>
+
+
+
+</body></html>

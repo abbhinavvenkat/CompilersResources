@@ -1,0 +1,9 @@
+#! /bin/bash
+# Authors:
+#	Abbhinav Venkat (201302063)
+#	Gaurav Mittal (201301149)
+#
+bison -d ./parse.y
+flex ./lex.l
+g++ lex.yy.c parse.tab.c -lfl -o lexer
+./lexer $1
